@@ -1,0 +1,57 @@
+{
+  "$schema": "https://waitcher.dev/schema/project-v1.json",
+  "schemaVersion": 1,
+  "project": "Waitcher",
+  "environments": {
+    "production": {
+      "baseUrl": "https://waitcher.dev"
+    }
+  },
+  "defaults": {
+    "interval": 1800,
+    "timeout": 15,
+    "failureThreshold": 2
+  },
+  "monitors": [
+    {
+      "key": "home",
+      "type": "http",
+      "name": "Waitcher",
+      "path": "/",
+      "settings": {
+        "method": "HEAD",
+        "expectedStatus": 200
+      }
+    },
+    {
+      "key": "tls",
+      "type": "certificate",
+      "name": "Waitcher / certificate"
+    },
+    {
+      "key": "health",
+      "type": "http",
+      "name": "Waitcher / API health",
+      "path": "/healthz",
+      "settings": {
+        "method": "GET",
+        "expectedStatus": 200,
+        "contains": "\"status\":\"ok\""
+      }
+    },
+    {
+      "key": "landing",
+      "type": "browser",
+      "name": "Waitcher / landing renders",
+      "entry": "tests/landing.e2e.ts",
+      "timeout": 30
+    },
+    {
+      "key": "home-look",
+      "type": "visual",
+      "name": "Waitcher / home page look",
+      "path": "/",
+      "failureThreshold": 10
+    }
+  ]
+}

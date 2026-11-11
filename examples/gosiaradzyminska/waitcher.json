@@ -1,0 +1,39 @@
+{
+  "$schema": "https://waitcher.dev/schema/project-v1.json",
+  "schemaVersion": 1,
+  "project": "Gosia Radzymińska",
+  "environments": {
+    "production": {
+      "baseUrl": "https://www.gosiaradzyminska.pl"
+    }
+  },
+  "defaults": {
+    "interval": 1800,
+    "timeout": 15,
+    "failureThreshold": 2
+  },
+  "monitors": [
+    {
+      "key": "home",
+      "type": "http",
+      "name": "Gosia Radzymińska",
+      "path": "/",
+      "settings": {
+        "method": "HEAD",
+        "expectedStatus": 200
+      }
+    },
+    {
+      "key": "tls",
+      "type": "certificate",
+      "name": "Gosia Radzymińska / certificate"
+    },
+    {
+      "key": "home-look",
+      "type": "visual",
+      "name": "Gosia Radzymińska / home page look",
+      "path": "/",
+      "failureThreshold": 10
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+node_modules/
+.waitcher/
+.e2e/
+*.token
+private/
+.DS_Store

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Waitcher"
+  short_description: "Deploy monitoring from a repository and inspect evidence"
+  default_prompt: "Use $waitcher to set up monitoring for this repository: pick the critical journeys, verify them locally and deploy them paused through a reviewed plan."
