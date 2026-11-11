@@ -10,7 +10,7 @@ This repository has two things:
 ## Install the skill
 
 ```sh
-npx skills add OWNER/REPO
+npx skills add waitcher/skills
 ```
 
 Or install the CLI and the copy of the skill it carries:
