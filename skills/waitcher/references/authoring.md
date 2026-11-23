@@ -4,7 +4,7 @@ Read when writing or changing a test, choosing a monitor type, or running it loc
 
 ## Choose the type
 
-- `http`: status, body text, a JSON value or latency of one request. No script.
+- `http`: status, body text, a JSON value or latency of one request. No script. A JSON assertion sets `settings.jsonPath` (such as `data.0.id`) and `settings.jsonValue` together; one without the other is refused.
 - `certificate`: TLS expiry and chain. No script.
 - `heartbeat`: a job reports start and success; Waitcher alerts when it does not.
 - `tcp`: a public `HOST:PORT` accepts connections (database, mail, SSH); optional `tcp.banner` the server must send first. No script.
@@ -49,6 +49,8 @@ test("visitor can start a game", async ({ app, browser, screen }) => {
 
 - `app.open(path)` resolves against the environment's base URL. Browser base URLs have no query or fragment; navigate to those URLs inside the script.
 - Find elements the way a visitor does with the `screen` fixture: `screen.getByRole("button", "New game")`, `screen.getByLabel("Email")`, `screen.getByText("Welcome")`, `screen.getByPlaceholder(...)`, `screen.getByTestId(...)`. Prefer these over CSS selectors.
+- A string matches the whole text exactly by default: `getByText("Welcome")` does not find "Welcome back, Ana". Pass `{ exact: false }` for a case-insensitive substring, or a regular expression (`getByText(/Welcome/)`).
+- Imports: `test` from `@e2e-dev/web`; `expect`, `secrets` and `credentials` from `e2e`. `@e2e-dev/web` exports none of those, and `monitor validate` stops with `IMPORT_NOT_FOUND` when a test takes one from it. Playwright users: `@playwright/test` does not build; port a journey by switching to these imports, `app.open(path)` and `screen.getBy*` locators.
 - The `browser` fixture navigates and offers CSS `browser.locator("main h1")` plus `expect(browser).toHaveURL(...)`; it has no `getBy*` methods.
 - Assertions come from `e2e`: `toBeVisible()`, `toContainText(...)`, `toHaveText(...)`.
 
@@ -68,7 +70,7 @@ API scripts import `test, expect` from `e2e` and read `process.env.TARGET_URL`. 
 
 ## Standalone manifest
 
-Without `waitcher.json`, a monitor is one JSON file. `monitor init --type browser --file monitor.json` writes it with `scriptFile` next to the test:
+Without `waitcher.json`, a monitor is one JSON file. `monitor init --type browser --file monitor.json` writes it with `scriptFile` next to the test (`login.monitor.json` or `login.json` gets `login.e2e.ts`; the result's `script` names it) and creates the folder when it does not exist. Script and visual examples start at `"interval": 7200`, the free Starter plan's shortest; Pro allows 300 (5 minutes), visual at least 1800. `monitor validate` adds `notes` when an interval is shorter than Starter allows:
 
 ```json
 {
@@ -77,7 +79,7 @@ Without `waitcher.json`, a monitor is one JSON file. `monitor init --type browse
   "type": "browser",
   "target": "https://example.com/",
   "enabled": false,
-  "interval": 1800,
+  "interval": 7200,
   "timeout": 30,
   "scriptFile": "journey.e2e.ts"
 }
@@ -98,14 +100,16 @@ waitcher run local --project /path/to/e2e-project --timeout 60
 - `--project` runs an existing E2E project with its own config and imports; its `--output` must stay inside that project.
 - Runs are serial, never retried or replayed, and get a fresh directory under `.waitcher/runs/` (`--output DIR` chooses the parent). Traces are always requested; video is opt-in, and tests can override recording, so inspect the returned files.
 - A run that did not pass prints `code`, `message`, `test`, `trace` and `next` at the top level; do what `next` says ([diagnosis](diagnosis.md#local-runs)). Then read the `trace` file and `.e2e/summary.md`, then `execution.log` and `report.json`, or `waitcher run diagnose --directory RUN_DIR`. The `waitcher-*.mjs` files there are runtime support, not your test. Traces are Markdown, not Playwright ZIPs; there is no HAR option, and app logs hold selected console and request failures only.
-- `APP_UNREACHABLE`, or an HTTP check's `fetch failed: connect ECONNREFUSED 127.0.0.1:3000`, means nothing answered at the target: start the app (or fix the URL) before changing the monitor.
+- `APP_UNREACHABLE` (a browser test, or an HTTP check's `fetch failed: connect ECONNREFUSED 127.0.0.1:3000`) means nothing answered at the target: start the app (or fix the URL) before changing the monitor. HTTP checks also name `TIMEOUT` (connected, no answer in time: the app hangs), `HTTP_STATUS` and `RESPONSE_MISMATCH`, with the trace at `.e2e/waitcher-trace.json`.
+- A failed expectation (`ASSERTION_FAILED`) brings `Screen at failure:` (alerts and status messages the page showed, such as `alert "Invalid credentials"`) and `App log:` (warnings such as `POST /login 401`) in `message`; they usually name the cause before you open the trace.
+- `trace.md` and `.e2e/summary.md` may start with a **Waitcher** note: when Waitcher words a cause differently from the framework (`config.secrets`, `E2E_SECRET_*`), follow the note, not the framework line below it.
 - Exit codes: 0 passed, 4 failed or error, 130 interrupted. After an interruption, inspect partial evidence before repeating a possibly completed action.
 - Fix test mistakes while preserving the user's assertions; never weaken an assertion just to get green.
 - Evidence can contain private content: keep `.waitcher/`, `.e2e/`, keys and reports out of Git. The default `.waitcher/` folder carries its own `.gitignore`. Local results are not uploaded and are not hosted health evidence.
 
 ## Apply one monitor through the API
 
-When hosted scripts are allowed and applying configuration is in scope:
+When hosted scripts are allowed and applying configuration is in scope. Every command here needs a session, `--dry-run` included: it asks the server to check the plan's limits, so it is not a local step. Signed out, the user runs `waitcher auth login` first.
 
 ```sh
 waitcher monitor apply --file monitor.json --dry-run

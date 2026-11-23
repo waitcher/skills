@@ -4,14 +4,16 @@ Read when a local, smoke or scheduled run failed or errored.
 
 ## Local runs
 
-`run local` (and `config validate --verify`) prints why a run did not pass at the top level: `code`, a `message` in Waitcher terms, the failing `test`, its `trace` and `next`. Do what `next` says; `waitcher explain CODE` has the meaning and fix offline. Hosted run messages start with the same code.
+`run local` prints why a run did not pass at the top level: `code`, a `message` in Waitcher terms, the failing `test`, its `trace` and `next`; `config validate --verify` gives the same `code`, `trace` and `next` per entry in `verify[]`. Each `next` entry is either one command to run as is (paths quoted) or a sentence with commands in backticks. Do what `next` says; `waitcher explain CODE` has the meaning and fix offline. Hosted run messages start with the same code.
 
 - `APP_UNREACHABLE`: nothing answered at the monitor's target. Start the app there (ask the user how, or use the project's start script), or correct `target`. Hosted runs reach only public addresses.
-- `SECRET_UNAVAILABLE`: the script calls `secrets.get(NAME)` without a value. Locally the user exports `NAME` in the shell that runs waitcher; hosted, `waitcher secret set`. The name must be in `settings.envNames`. A value under 6 characters is never registered as a secret: read it with `process.env.NAME` instead.
+- `SECRET_UNAVAILABLE`: the script calls `secrets.get(NAME)` without a value. Locally the user sets `NAME` in the shell that runs waitcher (`export NAME=...`; PowerShell `$env:NAME = "..."`; CMD `set NAME=...`); hosted, `waitcher secret set`. The name must be in `settings.envNames`. A value under 6 characters is never registered as a secret: read it with `process.env.NAME` instead.
 - `BROWSER_INSTALL_FAILED`: run `waitcher runtime install --browser`, and with `--yes` after the user agrees. A browser run without Chromium downloads it first and says so in `notes`.
 - `COLLECTION_ERROR`, `NO_TESTS`: the test file did not load; fix it.
-- `ASSERTION_FAILED` and other test codes: the app or the test is wrong; read the trace before changing the test.
-- `RUNTIME_INSTALL_FAILED` with npm `EALLOWSCRIPTS` (npm 11): npm got `allow-scripts` from the command line or an `npm_config_allow_scripts` variable. Unset it for the install and record approvals with `npm install-scripts approve esbuild` or `allow-scripts=esbuild` in `.npmrc`. A warning that esbuild's install script was skipped is harmless.
+- `ASSERTION_FAILED` and other test codes: an `expect()` did not hold, so the app or the test is wrong. `message` adds what the page showed and the app logged at the failure; read the trace before changing the test.
+- `IMPORT_NOT_FOUND`: the test imports a name its package does not export (`secrets` or `expect` from `@e2e-dev/web`); import it from `e2e`.
+- `RUNTIME_INSTALL_SCRIPTS_REFUSED` (npm 11 `EALLOWSCRIPTS`): the CLI already drops the `npm_config_allow_scripts` variable npx passes on, so something else gives npm `--allow-scripts`. Show the user `npm install-scripts approve esbuild` (or `allow-scripts=esbuild` in the project's `.npmrc`), then rerun `waitcher runtime install --yes`. A warning that esbuild's install script was skipped is harmless.
+- `RUNTIME_INSTALL_FAILED`: rerun `waitcher runtime install --yes` after fixing the cause; it finishes an interrupted install. `run local` refuses a folder without `node_modules` with the install command in `next`.
 - `CONFIG_DIR_PERMISSIONS`: the session folder is readable by others; the user runs the `chmod` in `next`.
 
 For "since when" or "how often" questions, `waitcher monitor history --id ID` gives 13 months of daily runs, failures, availability and p50/p95 for one monitor, and `waitcher report history` sums the account by month and monitor; individual runs and evidence only go back as far as the plan keeps them.

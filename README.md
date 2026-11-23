@@ -22,7 +22,7 @@ waitcher skill install --global    # ~/.claude/skills/waitcher and ~/.agents/ski
 waitcher skill install --path DIR  # only DIR/waitcher
 ```
 
-Then ask your agent: "Use the waitcher skill to set up monitoring for this repository." It starts with `waitcher doctor`, which checks the setup and prints the next commands. Signing in is `waitcher auth login`; a free account is enough for the examples below.
+Then ask your agent: "Use the waitcher skill to set up monitoring for this repository: pick the critical journeys, try them locally, and deploy them paused through a reviewed plan." It starts with `waitcher doctor`, which checks the setup and prints the next commands. Signing in is `waitcher auth login`; a free account is enough for the examples below.
 
 ## Examples
 
