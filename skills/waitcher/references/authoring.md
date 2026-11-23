@@ -87,21 +87,21 @@ Without `waitcher.json`, a monitor is one JSON file. `monitor init --type browse
 
 ## Run locally and inspect evidence
 
-The runtime project needs `e2e` and, for browser tests, `@e2e-dev/web` and Chromium, at the exact versions `waitcher runtime install` prints. `waitcher runtime install --file DIR/waitcher.json [--browser]` lists the npm install and Chromium download; run it with `--yes` once the user agrees. Chromium goes to the Playwright browser cache (`PLAYWRIGHT_BROWSERS_PATH` when set), not the runtime directory.
+The runtime project needs `e2e` and, for browser tests, `@e2e-dev/web` and Chromium, at the exact versions `waitcher runtime install` prints. Run `waitcher runtime install [--browser]` in the folder that holds `package.json` (or pass `--file DIR/waitcher.json`; the file need not exist, and a monitor file is refused): it lists the npm install and Chromium download; rerun it with `--yes` once the user agrees. A project that already has `@e2e-dev/web` or a browser monitor file keeps the browser packages without `--browser`. Without `waitcher.json` its `next` is the `run local` command of each monitor file it finds. Chromium goes to the Playwright browser cache (`PLAYWRIGHT_BROWSERS_PATH` when set), not the runtime directory; a browser run without it downloads it first and says so in `notes`.
 
 ```sh
-waitcher run local --file monitor.json --runtime /path/to/runtime
+waitcher run local --file monitor.json          # runtime: the current folder
 waitcher run local --file monitor.json --runtime /path/to/runtime --video
 waitcher run local --project /path/to/e2e-project --timeout 60
 ```
 
 - `--project` runs an existing E2E project with its own config and imports; its `--output` must stay inside that project.
 - Runs are serial, never retried or replayed, and get a fresh directory under `.waitcher/runs/` (`--output DIR` chooses the parent). Traces are always requested; video is opt-in, and tests can override recording, so inspect the returned files.
-- On failure read `.e2e/summary.md` and `.e2e/results/*/trace.md` in the run directory first, then `execution.log` and `report.json`. The `waitcher-*.mjs` files there are runtime support, not your test. Traces are Markdown, not Playwright ZIPs; there is no HAR option, and app logs hold selected console and request failures only.
-- A `status: error` message such as `fetch failed: connect ECONNREFUSED 127.0.0.1:3000` means nothing answered at the target: start the app (or fix the URL) before changing the monitor.
+- A run that did not pass prints `code`, `message`, `test`, `trace` and `next` at the top level; do what `next` says ([diagnosis](diagnosis.md#local-runs)). Then read the `trace` file and `.e2e/summary.md`, then `execution.log` and `report.json`, or `waitcher run diagnose --directory RUN_DIR`. The `waitcher-*.mjs` files there are runtime support, not your test. Traces are Markdown, not Playwright ZIPs; there is no HAR option, and app logs hold selected console and request failures only.
+- `APP_UNREACHABLE`, or an HTTP check's `fetch failed: connect ECONNREFUSED 127.0.0.1:3000`, means nothing answered at the target: start the app (or fix the URL) before changing the monitor.
 - Exit codes: 0 passed, 4 failed or error, 130 interrupted. After an interruption, inspect partial evidence before repeating a possibly completed action.
 - Fix test mistakes while preserving the user's assertions; never weaken an assertion just to get green.
-- Evidence can contain private content: keep `.waitcher/`, `.e2e/`, keys and reports out of Git. Local results are not uploaded and are not hosted health evidence.
+- Evidence can contain private content: keep `.waitcher/`, `.e2e/`, keys and reports out of Git. The default `.waitcher/` folder carries its own `.gitignore`. Local results are not uploaded and are not hosted health evidence.
 
 ## Apply one monitor through the API
 
