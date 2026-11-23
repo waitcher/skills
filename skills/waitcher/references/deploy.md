@@ -32,7 +32,7 @@ Read when the user keeps monitors in a repository with `waitcher.json`. The core
 - Entries are ordinary monitor definitions plus `key`, optional `environments` and optional `path` (resolved against `baseUrl`). Script and certificate targets default to `baseUrl`; heartbeats use the key as their label.
 - Never set `enabled`, `script`, `scriptFile`, `schemaVersion`, `context` or `demo` in entries.
 - Script tests read `process.env.TARGET_URL` (API) or call `app.open("/")` (browser), so one test serves every environment.
-- The directory holding `waitcher.json` must have `e2e@0.21.1`, `@e2e-dev/web@0.15.1` (browser) and `esbuild@0.28.2` installed exactly; `waitcher runtime install` sets them up and later upgrades them (ask before `--yes`). Do not let dependency bots move these three packages. Tests may import project files and JSON; other packages fail with `BUILD_FAILED` naming the import. Replace them with project code, `fetch` or JSON data; do not vendor a dependency to get past the limit. A built script must fit 50,000 characters.
+- The directory holding `waitcher.json` must have `e2e`, `@e2e-dev/web` (browser) and `esbuild` installed at the exact versions `waitcher runtime install` prints; `waitcher runtime install` sets them up and keeps the project's generation (ask before `--yes`); `waitcher runtime upgrade` moves the project and, through its deploys, its checks to another generation (see Runtime upgrades in the skill, [runtime updates](https://waitcher.dev/docs/runtime)). Do not let dependency bots move these three packages. Tests may import project files and JSON; other packages fail with `BUILD_FAILED` naming the import. Replace them with project code, `fetch` or JSON data; do not vendor a dependency to get past the limit. A built script must fit 50,000 characters.
 
 ## Plan and apply
 
@@ -52,7 +52,9 @@ printf %s "$VALUE" | waitcher secret set --env staging --name CHECK_ORDERS_TOKEN
 waitcher secret list --env staging
 ```
 
-Ask the user for each value, or tell them the command to run themselves. Never echo, log or commit it. A plan reports `SECRET_MISSING` with the missing names. `--verify` runs with your local environment, so export the same `CHECK_*` variables locally (never in files) or skip `--verify` for that monitor and rely on `--smoke`.
+In Windows PowerShell pipe the same way: `$env:VALUE | waitcher secret set --env staging --name CHECK_ORDERS_TOKEN --value-stdin` (the trailing newline is dropped).
+
+Ask the user for each value, or tell them the command to run themselves. Never echo, log or commit it. A plan reports `SECRET_MISSING` with the missing names. `--verify` runs with your local environment, so set the same `CHECK_*` variables in the shell (bash: `export CHECK_NAME=...`, PowerShell: `$env:CHECK_NAME = "..."`, CMD: `set CHECK_NAME=...`; never in files) or skip `--verify` for that monitor and rely on `--smoke`.
 
 Listed values of at least 6 characters appear as `<secret:CHECK_NAME>` in reports, traces and logs; screenshots, video and transformed values are not masked. For a password or token typed into a page, prefer `fill(secrets.get("CHECK_NAME"))` (`import { secrets } from "e2e"`) over `process.env`: the value stays out of the test code and the run refuses `app.screenshot()` after that fill, so take screenshots before it or drop them. Read `process.env.CHECK_NAME` for values the script sends itself, such as API headers. Never log a value or assert on it.
 
@@ -66,4 +68,4 @@ When a plan warns `ADOPTION_CANDIDATE`, an existing unmanaged monitor looks like
 
 ## CI
 
-`waitcher ci init [--env production] [--file waitcher.json]` writes `.github/workflows/waitcher.yml`: plan on pull requests, apply on pushes to the main branch. It installs the CLI from the server with a checksum and signs in with the `WAITCHER_TOKEN` repository secret. Create that token with read and write permissions (add run for `--smoke`) and `"projectId"` set to the project's ID (from `deploy plan`'s `project.id`) using `waitcher token create`, so CI cannot touch other projects, and let the user store it with `gh secret set WAITCHER_TOKEN`. Set the `WAITCHER_SERVER` repository variable for a non-default server.
+`waitcher ci init [--env production] [--file waitcher.json]` writes `.github/workflows/waitcher.yml`: plan on pull requests, apply on pushes to the main branch. It installs the CLI from the server with a checksum and signs in with the `WAITCHER_TOKEN` repository secret. Create that token with read and write permissions (add run for `--smoke`) and `"projectId"` set to the project's ID (from `deploy plan`'s `project.id`) using `waitcher token create`, so CI cannot touch other projects, and let the user store it with `gh secret set WAITCHER_TOKEN`. Signed in with a project token, read `authorization.projectName` from `waitcher auth status` and use it as `waitcher.json`'s `project` (`config init --project-name NAME`); such a token changes monitors only through `deploy apply`, so do not try `monitor apply`. Set the `WAITCHER_SERVER` repository variable for a non-default server.

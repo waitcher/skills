@@ -7,6 +7,9 @@ Read when writing or changing a test, choosing a monitor type, or running it loc
 - `http`: status, body text, a JSON value or latency of one request. No script.
 - `certificate`: TLS expiry and chain. No script.
 - `heartbeat`: a job reports start and success; Waitcher alerts when it does not.
+- `tcp`: a public `HOST:PORT` accepts connections (database, mail, SSH); optional `tcp.banner` the server must send first. No script.
+- `dns`: a name's `A`, `AAAA`, `CNAME`, `MX` or `TXT` records hold `dns.expected` (`match`: `includes` or `exact`), asked of public resolvers. In `waitcher.json` a `dns` entry without `target` checks the `baseUrl` host. Details: https://waitcher.dev/docs/network.md.
+- `mcp`: a remote MCP server (Streamable HTTP). Lists tools and checks `mcp.expectTools`; an optional `mcp.toolCall` calls one side-effect-free tool with fixed arguments and JSON-pointer `assertions` on its result. No script. `run local --file mcp.json` runs it without an account; its `mcp-report.json` lists the tool names and `mcp-tool-result.json` holds the called tool's answer, so read both before writing `expectTools` and assertions. Personal tool calls need verified `httpAuth` and a 30-minute interval; listing tools needs neither. Never pick a tool that writes data. Details: https://waitcher.dev/docs/mcp.md.
 - `api`: a script with several requests and an invariant between them.
 - `browser`: a script that walks a user journey in Chromium.
 - `visual`: a screenshot of one public page or element compared with a baseline the user approved. No script; see [optional capabilities](optional-capabilities.md#optional-visual-checks).
@@ -80,11 +83,11 @@ Without `waitcher.json`, a monitor is one JSON file. `monitor init --type browse
 }
 ```
 
-`scriptFile` resolves relative to the manifest; `monitor validate --file monitor.json` checks the actual contract. The platform receives one script per monitor, not the project directory. When the test imports shared helpers, run `monitor build --file monitors/checkout.json --project . --output build/checkout`: it needs installed `esbuild@0.28.2`, bundles code and JSON helpers, keeps only supported framework and Node imports, and writes `monitor.js`, `monitor.json` and `build.json` into a new directory. Unsupported dependencies and module-relative file access fail the build. Verify and apply the built `monitor.json`. The script limit is 50,000 characters and hosted dependencies are fixed.
+`scriptFile` resolves relative to the manifest; `monitor validate --file monitor.json` checks the actual contract. The platform receives one script per monitor, not the project directory. When the test imports shared helpers, run `monitor build --file monitors/checkout.json --project . --output build/checkout`: it needs installed `esbuild`, bundles code and JSON helpers, keeps only supported framework and Node imports, and writes `monitor.js`, `monitor.json` and `build.json` into a new directory. Unsupported dependencies and module-relative file access fail the build. Verify and apply the built `monitor.json`. The script limit is 50,000 characters and hosted dependencies are fixed.
 
 ## Run locally and inspect evidence
 
-The runtime project needs `e2e@0.21.1` and, for browser tests, `@e2e-dev/web@0.15.1` and Chromium. `waitcher runtime install --file DIR/waitcher.json [--browser]` lists the npm install and Chromium download; run it with `--yes` once the user agrees. Chromium goes to the Playwright browser cache (`PLAYWRIGHT_BROWSERS_PATH` when set), not the runtime directory.
+The runtime project needs `e2e` and, for browser tests, `@e2e-dev/web` and Chromium, at the exact versions `waitcher runtime install` prints. `waitcher runtime install --file DIR/waitcher.json [--browser]` lists the npm install and Chromium download; run it with `--yes` once the user agrees. Chromium goes to the Playwright browser cache (`PLAYWRIGHT_BROWSERS_PATH` when set), not the runtime directory.
 
 ```sh
 waitcher run local --file monitor.json --runtime /path/to/runtime
@@ -95,6 +98,7 @@ waitcher run local --project /path/to/e2e-project --timeout 60
 - `--project` runs an existing E2E project with its own config and imports; its `--output` must stay inside that project.
 - Runs are serial, never retried or replayed, and get a fresh directory under `.waitcher/runs/` (`--output DIR` chooses the parent). Traces are always requested; video is opt-in, and tests can override recording, so inspect the returned files.
 - On failure read `.e2e/summary.md` and `.e2e/results/*/trace.md` in the run directory first, then `execution.log` and `report.json`. The `waitcher-*.mjs` files there are runtime support, not your test. Traces are Markdown, not Playwright ZIPs; there is no HAR option, and app logs hold selected console and request failures only.
+- A `status: error` message such as `fetch failed: connect ECONNREFUSED 127.0.0.1:3000` means nothing answered at the target: start the app (or fix the URL) before changing the monitor.
 - Exit codes: 0 passed, 4 failed or error, 130 interrupted. After an interruption, inspect partial evidence before repeating a possibly completed action.
 - Fix test mistakes while preserving the user's assertions; never weaken an assertion just to get green.
 - Evidence can contain private content: keep `.waitcher/`, `.e2e/`, keys and reports out of Git. Local results are not uploaded and are not hosted health evidence.

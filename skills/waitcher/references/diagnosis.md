@@ -2,6 +2,8 @@
 
 Read when a local, smoke or scheduled run failed or errored.
 
+For "since when" or "how often" questions, `waitcher monitor history --id ID` gives 13 months of daily runs, failures, availability and p50/p95 for one monitor, and `waitcher report history` sums the account by month and monitor; individual runs and evidence only go back as far as the plan keeps them.
+
 ## Diagnose and reproduce a retained run
 
 Confirm `features.runDiagnosis` for hosted support. Use `run diagnose --id RUN_ID` for a readable hosted packet, or add `--json` for the shared structured report. Use `run diagnose --directory PRIVATE_RUN_DIRECTORY` without an account to inspect indexed local evidence. Hosted request states come from the controller ledger; local helper observations are explicitly local and do not attest hosted accounting. A known response does not prove task success, and an unknown action may have taken effect. Do not automatically repeat a mutation because its result is unknown.

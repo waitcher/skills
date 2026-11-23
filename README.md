@@ -17,9 +17,9 @@ Or install the CLI and the copy of the skill it carries:
 
 ```sh
 npm install -g @waitcher/cli@latest
-waitcher skill install             # .claude/skills/waitcher in this repository
-waitcher skill install --global    # ~/.claude/skills/waitcher
-waitcher skill install --path .agents/skills    # Codex and other agents
+waitcher skill install             # .claude/skills/waitcher and .agents/skills/waitcher (Claude Code, Codex)
+waitcher skill install --global    # ~/.claude/skills/waitcher and ~/.agents/skills/waitcher
+waitcher skill install --path DIR  # only DIR/waitcher
 ```
 
 Then ask your agent: "Use the waitcher skill to set up monitoring for this repository." It starts with `waitcher doctor`, which checks the setup and prints the next commands. Signing in is `waitcher auth login`; a free account is enough for the examples below.
