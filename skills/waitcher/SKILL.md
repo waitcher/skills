@@ -42,6 +42,7 @@ For CI, `waitcher ci init` writes a workflow that plans on pull requests and app
 
 - `waitcher --help` prints a short overview of topics; `waitcher help TOPIC` (or `waitcher GROUP --help`) prints one part with the exit codes; `waitcher help all` is long, avoid it.
 - Exit 2: fix the file or input; exit 3: sign in; exit 4: a check failed (inspect evidence); exit 6: quota, rate or queue limit; exit 7: not permitted; exit 8: conflict or managed by `waitcher.json`; exit 9: not found; exit 10: service unavailable.
+- For how each site or project is doing, `waitcher monitor list` returns every monitor with its `last` result and `scope.projectName` and `scope.environmentName`: group by project when you report, as the web app's Monitors list does. `--project-id ID` (from `waitcher project list`) narrows it to one project. `waitcher monitor move --id ID --project NAME` moves a monitor that `waitcher.json` does not manage, keeping its ID, history and pause state; ask the user first.
 - For a failed run, read [diagnosis](references/diagnosis.md): `waitcher run diagnose --id RUN_ID`, then reproduce locally before changing the test.
 - Never retry a write automatically after an uncertain result; read the current state first.
 
